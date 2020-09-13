@@ -84,7 +84,7 @@ defmodule Esquew.Hub do
         new_val = {topic, all_subs}
         :ets.insert(@name, new_val)
 
-        {:reply, new_val, state}
+        {:reply, {:ok, new_val}, state}
 
       :error ->
         {:reply, :error, state}
