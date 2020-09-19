@@ -16,7 +16,7 @@ defmodule Esquew.Subscription do
     )
   end
 
-  @spec read(String.t(), String.t(), Integer) :: list({reference(), String.t()})
+  @spec read(String.t(), String.t(), Integer) :: list({String.t(), String.t()})
   def read(topic, name, num \\ 1) do
     pid = lookup_subscription(topic, name)
     GenServer.call(pid, {:read, num})
@@ -54,18 +54,19 @@ defmodule Esquew.Subscription do
   defp build_name_atom(topic, subscription),
     do: String.to_atom(build_name(topic, subscription))
 
-  @spec remove_from_pool(String.t(), String.t(), reference(), boolean(), boolean()) :: [:ok | nil]
+  @spec remove_from_pool(String.t(), String.t(), String.t(), boolean(), boolean()) :: [:ok | nil]
   defp remove_from_pool(topic, subscription, ref, delay \\ false, send_again \\ false) do
     if delay do
       Process.sleep(20000)
     end
 
-    case :ets.lookup(build_name_atom(topic, subscription), ref) do
-      [{ref, msg}] ->
-        if :ets.delete(build_name_atom(topic, subscription), ref) do
+    subscription_full_name = build_name_atom(topic, subscription)
+
+    case :ets.lookup(subscription_full_name, ref) do
+      [{^ref, msg}] ->
+        if :ets.delete(subscription_full_name, ref) do
           if send_again do
-            pid = lookup_subscription(topic, subscription)
-            GenServer.cast(pid, {:publish, msg})
+            GenServer.cast(lookup_subscription(topic, subscription), {:publish, msg})
           end
         end
 
@@ -89,7 +90,7 @@ defmodule Esquew.Subscription do
     reply =
       Enum.take(state.messages, count)
       |> Enum.map(fn msg ->
-        ref = make_ref()
+        ref = :crypto.strong_rand_bytes(8) |> Base.encode64()
         out = {ref, msg}
         :ets.insert(build_name_atom(state.topic, state.subscription), out)
         Task.start(fn -> remove_from_pool(state.topic, state.subscription, ref, true, true) end)

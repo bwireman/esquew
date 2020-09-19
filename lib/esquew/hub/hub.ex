@@ -12,8 +12,11 @@ defmodule Esquew.Hub do
 
   ## api
 
-  def list(),
-    do: :ets.match_object(@name, :_)
+  def list() do
+    Enum.map(:ets.match_object(@name, :_), fn {topic, subs} ->
+      %{name: topic, subscriptions: subs}
+    end)
+  end
 
   def add_topic(topic),
     do: GenServer.call(@name, {:add_topic, topic})
@@ -22,9 +25,14 @@ defmodule Esquew.Hub do
     do: GenServer.call(@name, {:add_subscription, topic, subscription})
 
   def publish(topic, msg) do
-    Registry.dispatch(@registry, topic, fn entries ->
-      for {pid, _} <- entries, do: GenServer.cast(pid, {:publish, msg})
-    end)
+    case Registry.lookup(@registry, topic) do
+      [] -> :error
+
+      _ -> Registry.dispatch(@registry, topic, fn entries ->
+        for {pid, _} <- entries, do: GenServer.cast(pid, {:publish, msg})
+      end)
+
+    end
   end
 
   ## Private
