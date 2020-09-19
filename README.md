@@ -1,17 +1,17 @@
 # Esquew
 
 ---
-A stupid simple Pure Elixir ⚗️ Messaging Queue. 
+A stupid simple Pure Elixir ⚗️ Messaging Queue. Pronounced "askew"
 
-### Messaging
+## Messaging
 
-Esquew is a transient, at most once messaging queue supporting a REST api. It allows for multiple topics and subscriptions, with ack and nack capability
+Esquew is a transient, at most once messaging queue supporting a REST api. It allows for multiple topics and with multiple subscriptions, all with ack and nack capability.
 
-### Limitations
+## Limitations
 
 - Messages are not persisted, and only live for the duration of relevant processes
 
-### Roadmap
+## Roadmap
 - [X] API
 - [X] Tests 
 - [X] Subscription State Struct
