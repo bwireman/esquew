@@ -12,24 +12,30 @@ defmodule Esquew.Api.SubscriptionRouter do
         val -> String.to_integer(val)
       end
 
-    messages = Esquew.Subscription.read(topic, subscription, count)
+    {code, resp} =
+      case Esquew.Subscription.read(topic, subscription, count) do
+        {:ok, messages} ->
+          {200,
+           %{
+             messages:
+               Enum.map(messages, fn {ref, msg} ->
+                 %{ref: ref, message: msg}
+               end)
+           }}
 
-    resp = %{
-      messages:
-        Enum.map(messages, fn {ref, msg} ->
-          %{ref: ref, message: msg}
-        end)
-    }
+        {:error, error} ->
+          {400, %Esquew.Api.APIResp{status: :error, response: error}}
+      end
 
-    Esquew.Api.resp_boiler_plate(conn, 200, resp)
+    Esquew.Api.resp_boiler_plate(conn, code, resp)
   end
 
   post "/ack/:topic/:subscription" do
-    ack_or_nack(conn, &(Esquew.Subscription.ack(topic, subscription, &1)))
+    ack_or_nack(conn, &Esquew.Subscription.ack(topic, subscription, &1))
   end
 
   post "/nack/:topic/:subscription" do
-    ack_or_nack(conn, &(Esquew.Subscription.nack(topic, subscription, &1)))
+    ack_or_nack(conn, &Esquew.Subscription.nack(topic, subscription, &1))
   end
 
   match _ do

@@ -18,31 +18,46 @@ defmodule Esquew.Subscription do
 
   @spec read(String.t(), String.t(), Integer) :: list({String.t(), String.t()})
   def read(topic, name, num \\ 1) do
-    pid = lookup_subscription(topic, name)
-    GenServer.call(pid, {:read, num})
+    case lookup_subscription(topic, name) do
+      {:ok, pid} ->
+        {:ok, GenServer.call(pid, {:read, num})}
+
+      resp ->
+        resp
+    end
   end
 
   @spec ack(String.t(), String.t(), reference()) :: :ok
   def ack(topic, name, ref) do
-    pid = lookup_subscription(topic, name)
-    GenServer.cast(pid, {:ack, ref})
+    case lookup_subscription(topic, name) do
+      {:ok, pid} ->
+        GenServer.cast(pid, {:ack, ref})
+
+      resp ->
+        resp
+    end
   end
 
   @spec nack(String.t(), String.t(), reference()) :: :ok
   def nack(topic, name, ref) do
-    pid = lookup_subscription(topic, name)
-    GenServer.cast(pid, {:nack, ref})
+    case lookup_subscription(topic, name) do
+      {:ok, pid} ->
+        GenServer.cast(pid, {:nack, ref})
+
+      resp ->
+        resp
+    end
   end
 
   ## private
-  @spec lookup_subscription(String.t(), String.t()) :: pid()
+  @spec lookup_subscription(String.t(), String.t()) :: {atom(), pid()}
   defp lookup_subscription(topic, subscription) do
     case Registry.match(@registry, topic, subscription) do
       [{pid, _}] ->
-        pid
+        {:ok, pid}
 
       _ ->
-        raise "Subscription \"#{build_name(topic, subscription)}\" could not be found"
+        {:error, "Subscription \"#{build_name(topic, subscription)}\" could not be found"}
     end
   end
 
@@ -66,7 +81,8 @@ defmodule Esquew.Subscription do
       [{^ref, msg}] ->
         if :ets.delete(subscription_full_name, ref) do
           if send_again do
-            GenServer.cast(lookup_subscription(topic, subscription), {:publish, msg})
+            {:ok, pid} = lookup_subscription(topic, subscription)
+            GenServer.cast(pid, {:publish, msg})
           end
         end
 
