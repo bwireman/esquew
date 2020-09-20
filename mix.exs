@@ -7,7 +7,8 @@ defmodule Esquew.MixProject do
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      dialyzer: [plt_add_apps: [:ex_unit, :mix], ignore_warnings: "config/dialyzer.ignore"]
     ]
   end
 
@@ -26,6 +27,7 @@ defmodule Esquew.MixProject do
       {:plug, "~> 1.10"},
       {:cowboy, "~> 2.8"},
       {:plug_cowboy, "~> 2.3"},
+      {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
     ]
   end
 end

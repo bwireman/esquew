@@ -1,6 +1,10 @@
 defmodule Esquew.Hub.Supervisor do
   use Supervisor
 
+  @moduledoc """
+  Supervisor for the Hub and Registry
+  """
+
   def start_link(init_arg) do
     Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end

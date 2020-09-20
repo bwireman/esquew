@@ -1,9 +1,17 @@
 defmodule Esquew.Api do
   use Plug.Router
 
+  @moduledoc """
+  Root of the Esquew API
+  """
+
   @name __MODULE__
 
   defmodule APIResp do
+
+    @moduledoc """
+    Struct for API call response
+    """
     @enforce_keys [:response]
     defstruct status: :ok, response: ""
   end
@@ -33,7 +41,7 @@ defmodule Esquew.Api do
   end
 
   match _ do
-    send_resp(conn, 404, "Requested page not found!")
+    not_found(conn)
   end
 
   ## helpers
@@ -42,5 +50,9 @@ defmodule Esquew.Api do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(code, Poison.encode!(resp))
+  end
+
+  def not_found(conn) do
+    resp_boiler_plate(conn, 404, %Esquew.Api.APIResp{status: :error, response: "Page not found"})
   end
 end

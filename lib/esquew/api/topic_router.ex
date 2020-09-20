@@ -4,6 +4,10 @@ defmodule Esquew.Api.TopicRouter do
   plug(:match)
   plug(:dispatch)
 
+  @moduledoc """
+  Module for topic related api calls
+  """
+
   get "/" do
     Esquew.Api.resp_boiler_plate(conn, 200, Esquew.Hub.list())
   end
@@ -51,6 +55,6 @@ defmodule Esquew.Api.TopicRouter do
   end
 
   match _ do
-    send_resp(conn, 404, "Requested page not found!")
+    Esquew.Api.not_found(conn)
   end
 end

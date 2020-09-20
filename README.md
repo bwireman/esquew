@@ -16,4 +16,6 @@ Esquew is a transient, at most once messaging queue supporting a REST api. It al
 - [X] Tests 
 - [X] Subscription State Struct
 - [ ] Subscriptions and Topics survive Hub crashes
+- [ ] HTTPS
+- [ ] Permission levels via JWT
 - [ ] ...

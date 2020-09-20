@@ -1,10 +1,13 @@
 defmodule Esquew.Hub do
   use GenServer
 
+  @moduledoc """
+  Esquew Hub where topics and subscriptions can be created
+  """
+
   ## boiler
 
   @name __MODULE__
-  @registry Esquew.Registry
 
   def start_link(%{}) do
     GenServer.start_link(@name, %{}, name: @name)
@@ -12,7 +15,7 @@ defmodule Esquew.Hub do
 
   ## api
 
-  def list() do
+  def list do
     Enum.map(:ets.match_object(@name, :_), fn {topic, subs} ->
       %{name: topic, subscriptions: subs}
     end)

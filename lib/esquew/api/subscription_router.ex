@@ -2,6 +2,10 @@ defmodule Esquew.Api.SubscriptionRouter do
   import Plug.Conn
   use Plug.Router
 
+  @moduledoc """
+  Module for subscription related api calls
+  """
+
   plug(:match)
   plug(:dispatch)
 
@@ -39,7 +43,7 @@ defmodule Esquew.Api.SubscriptionRouter do
   end
 
   match _ do
-    send_resp(conn, 404, "Requested page not found!")
+    Esquew.Api.not_found(conn)
   end
 
   ## private functions
@@ -48,7 +52,7 @@ defmodule Esquew.Api.SubscriptionRouter do
     {code, resp} =
       case conn.body_params do
         %{"refs" => refs} ->
-          Enum.map(refs, &func.(&1))
+          Enum.each(refs, &func.(&1))
           {200, %Esquew.Api.APIResp{response: refs}}
 
         _ ->

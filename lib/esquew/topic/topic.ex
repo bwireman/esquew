@@ -1,4 +1,9 @@
 defmodule Esquew.Topic do
+
+  @moduledoc """
+  Module for managing topics
+  """
+
   @registry Esquew.Registry
 
   def publish(topic, msg) do

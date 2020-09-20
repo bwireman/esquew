@@ -1,9 +1,17 @@
 defmodule Esquew.Subscription do
   use GenServer
 
+  @moduledoc """
+  Genserver module for the state of a subscription
+  """
+
   @registry Esquew.Registry
 
   defmodule SubscriptionState do
+    @moduledoc """
+    Struct representing Subscription state
+    """
+
     @enforce_keys [:topic, :subscription]
     defstruct topic: "", subscription: "", messages: []
   end
@@ -72,18 +80,18 @@ defmodule Esquew.Subscription do
   @spec remove_from_pool(String.t(), String.t(), String.t(), boolean(), boolean()) :: [:ok | nil]
   defp remove_from_pool(topic, subscription, ref, delay \\ false, send_again \\ false) do
     if delay do
-      Process.sleep(20000)
+      Process.sleep(20_000)
     end
 
     subscription_full_name = build_name_atom(topic, subscription)
 
     case :ets.lookup(subscription_full_name, ref) do
       [{^ref, msg}] ->
-        if :ets.delete(subscription_full_name, ref) do
-          if send_again do
-            {:ok, pid} = lookup_subscription(topic, subscription)
-            GenServer.cast(pid, {:publish, msg})
-          end
+        deleted = :ets.delete(subscription_full_name, ref)
+
+        if deleted && send_again do
+          {:ok, pid} = lookup_subscription(topic, subscription)
+          GenServer.cast(pid, {:publish, msg})
         end
 
       [] ->
