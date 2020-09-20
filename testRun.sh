@@ -21,8 +21,10 @@ runBench() {
 killEsquew() {
     echo "Killing esquew..."
     kill -9 $(cat pid)
+    echo "☠️"
 }
 
 launchEsquew
 runBench
 killEsquew
+rm pid

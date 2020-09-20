@@ -17,7 +17,7 @@ var topics = []string{"T1", "T2", "T3"}
 var subscriptions = []string{"S1", "S2", "S3"}
 
 const (
-	pubMax = 50
+	pubMax = 25
 	subMax = 50
 )
 
@@ -30,6 +30,19 @@ type MessageResp struct {
 	Messages []Message `json:messages`
 }
 
+func randomSleep() {
+	time.Sleep(time.Duration(rand.Intn(150)) * time.Millisecond)
+}
+
+func randomRepeat(id int, f func(int)) {
+	reps := rand.Intn(5)
+
+	for i := 0; i < reps; i++ {
+		randomSleep()
+		go f(id)
+	}
+}
+
 func post(url string, body []byte) (*http.Response, error) {
 	return http.Post(fmt.Sprintf("http://localhost:4000/api/%s", url), "application/json", bytes.NewBuffer(body))
 }
@@ -38,27 +51,23 @@ func get(url string) (*http.Response, error) {
 	return http.Get(fmt.Sprintf("http://localhost:4000/api/%s", url))
 }
 
-func randomSleep() {
-	time.Sleep(time.Duration(rand.Intn(150)) * time.Millisecond)
-}
-
-func pub() {
+func pub(id int) {
 	randomSleep()
 	topic := topics[rand.Intn(len(topics))]
 	sent := rand.Intn(pubMax)
 
 	for i := 0; i < sent; i++ {
-		_, err := post(fmt.Sprintf("publish/%s", topic), []byte(fmt.Sprintf(`{"message":"%d"}`, i)))
+		_, err := post(fmt.Sprintf("publish/%s", topic), []byte(fmt.Sprintf(`{"message":"id: %d, message: %d"}`, id, i)))
 		if err != nil {
 			panic(err.Error())
 		}
 		randomSleep()
 	}
-	log.Printf("sent\t%d messages to %s\n", sent, topic)
+	log.Printf("worker:%d\tsent\t%d messages to %s\n", id, sent, topic)
 
 }
 
-func sub() {
+func sub(id int) {
 	randomSleep()
 	topic := topics[rand.Intn(len(topics))]
 	subscription := subscriptions[rand.Intn(len(subscriptions))]
@@ -83,7 +92,7 @@ func sub() {
 		panic(err.Error())
 	}
 
-	log.Printf("read\t%d messages from %s:%s\n", len(message.Messages), topic, subscription)
+	log.Printf("worker:%d\tread\t%d messages from %s:%s\n", id, len(message.Messages), topic, subscription)
 	for _, r := range message.Messages {
 		action := "ack"
 
@@ -92,13 +101,12 @@ func sub() {
 		}
 
 		randomSleep()
-		randomSleep()
 		_, err = post(fmt.Sprintf("subscriptions/%s/%s/%s", action, topic, subscription), []byte(fmt.Sprintf(`{"refs": [%s]}`, r.Ref)))
 
 		if err != nil {
 			panic(err.Error())
 		}
-		log.Println(fmt.Sprintf("%sed\t%s", action, r.Ref))
+		log.Printf("worker:%d\t%sed\t%s", id, action, r.Message)
 	}
 
 }
@@ -106,17 +114,17 @@ func sub() {
 func main() {
 	for _, topic := range topics {
 		for _, sub := range subscriptions {
+			log.Printf("creating topic: %s, subscription %s", topic, sub)
 			post("/create", []byte(fmt.Sprintf(`{"topic":"%s", "subscriptions": ["%s"]}`, topic, sub)))
 		}
 
 	}
 
-	for i := 0; i < 1000; i++ {
-		log.Printf("launching\t%d\n", i)
+	for id := 0; id < 500; id++ {
+		log.Printf("worker:%d\tstarting\n", id)
+		go randomRepeat(id, pub)
 		randomSleep()
-		go pub()
-		go sub()
-		randomSleep()
+		go randomRepeat(id, sub)
 	}
 
 }
