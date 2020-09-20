@@ -4,7 +4,7 @@ defmodule Esquew.Hub do
   ## boiler
 
   @name __MODULE__
-  @registry Esquew.Hub.Registry
+  @registry Esquew.Registry
 
   def start_link(%{}) do
     GenServer.start_link(@name, %{}, name: @name)
@@ -23,17 +23,6 @@ defmodule Esquew.Hub do
 
   def add_subscription(topic, subscription),
     do: GenServer.call(@name, {:add_subscription, topic, subscription})
-
-  def publish(topic, msg) do
-    case Registry.lookup(@registry, topic) do
-      [] -> :error
-
-      _ -> Registry.dispatch(@registry, topic, fn entries ->
-        for {pid, _} <- entries, do: GenServer.cast(pid, {:publish, msg})
-      end)
-
-    end
-  end
 
   ## Private
 

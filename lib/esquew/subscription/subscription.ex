@@ -1,7 +1,7 @@
 defmodule Esquew.Subscription do
   use GenServer
 
-  @registry Esquew.Hub.Registry
+  @registry Esquew.Registry
 
   defmodule SubscriptionState do
     @enforce_keys [:topic, :subscription]

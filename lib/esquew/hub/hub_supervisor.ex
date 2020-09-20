@@ -12,7 +12,7 @@ defmodule Esquew.Hub.Supervisor do
         id: Esquew.Hub,
         start: {Esquew.Hub, :start_link, [%{}]}
       },
-      {Registry, keys: :duplicate, name: Esquew.Hub.Registry},
+      {Registry, keys: :duplicate, name: Esquew.Registry},
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

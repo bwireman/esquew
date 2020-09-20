@@ -31,7 +31,7 @@ defmodule Esquew.Api.TopicRouter do
     {code, resp} =
       case conn.body_params do
         %{"message" => message} ->
-          case Esquew.Hub.publish(topic, message) do
+          case Esquew.Topic.publish(topic, message) do
             :ok ->
               {200, %Esquew.Api.APIResp{response: "Message sent"}}
 

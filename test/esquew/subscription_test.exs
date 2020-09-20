@@ -13,7 +13,7 @@ defmodule Esquew.SubscriptionTest do
   end
 
   test "publishes to topics can be read from all subscriptions acked and nacked" do
-    Esquew.Hub.publish(@test_topic, "M2")
+    Esquew.Topic.publish(@test_topic, "M2")
     {:ok, [{ref, message}]} = Esquew.Subscription.read(@test_topic, @test_sub1)
     assert message === "M2"
     assert Esquew.Subscription.read(@test_topic, @test_sub1) === {:ok, []}
@@ -26,7 +26,7 @@ defmodule Esquew.SubscriptionTest do
     assert Esquew.Subscription.ack(@test_topic, @test_sub2, ref) === :ok
     assert Esquew.Subscription.read(@test_topic, @test_sub2) === {:ok, []}
 
-    Esquew.Hub.publish(@test_topic, "M3")
+    Esquew.Topic.publish(@test_topic, "M3")
     {:ok, [{ref, message}]} = Esquew.Subscription.read(@test_topic, @test_sub1)
     assert message === "M3"
     assert Esquew.Subscription.read(@test_topic, @test_sub1) === {:ok, []}
