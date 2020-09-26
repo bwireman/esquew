@@ -9,7 +9,7 @@ on:
 jobs:
   build:
   
-    name: Build and test
+    name: Run testRun.sh
     runs-on: ubuntu-latest
 
     steps:
@@ -32,6 +32,8 @@ jobs:
         restore-keys: ${{ runner.os }}-mix-
     - name: Install dependencies
       run: mix deps.get
+    - name: Compile
+      run: mix compile
     - name: Test Run
       timeout-minutes: 5
       run: ./testRun.sh
