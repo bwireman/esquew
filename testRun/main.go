@@ -10,16 +10,18 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"sync"
 	"time"
+)
+
+const (
+	pubMax     = 20
+	subMax     = 20
+	numWorkers = 1500
 )
 
 var topics = []string{"T1", "T2", "T3"}
 var subscriptions = []string{"S1", "S2", "S3"}
-
-const (
-	pubMax = 25
-	subMax = 50
-)
 
 type Message struct {
 	Ref     string `json:ref`
@@ -31,16 +33,7 @@ type MessageResp struct {
 }
 
 func randomSleep() {
-	time.Sleep(time.Duration(rand.Intn(150)) * time.Millisecond)
-}
-
-func randomRepeat(id int, f func(int)) {
-	reps := rand.Intn(5)
-
-	for i := 0; i < reps; i++ {
-		randomSleep()
-		go f(id)
-	}
+	time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
 }
 
 func post(url string, body []byte) (*http.Response, error) {
@@ -51,10 +44,10 @@ func get(url string) (*http.Response, error) {
 	return http.Get(fmt.Sprintf("http://localhost:4000/api/%s", url))
 }
 
-func pub(id int) {
+func pub(id int, wg *sync.WaitGroup) {
 	randomSleep()
 	topic := topics[rand.Intn(len(topics))]
-	sent := rand.Intn(pubMax)
+	sent := rand.Intn(pubMax) + 1
 
 	for i := 0; i < sent; i++ {
 		_, err := post(fmt.Sprintf("publish/%s", topic), []byte(fmt.Sprintf(`{"message":"id: %d, message: %d"}`, id, i)))
@@ -64,14 +57,14 @@ func pub(id int) {
 		randomSleep()
 	}
 	log.Printf("worker:%d\tsent\t%d messages to %s\n", id, sent, topic)
-
+	wg.Done()
 }
 
-func sub(id int) {
+func sub(id int, wg *sync.WaitGroup) {
 	randomSleep()
 	topic := topics[rand.Intn(len(topics))]
 	subscription := subscriptions[rand.Intn(len(subscriptions))]
-	count := rand.Intn(subMax)
+	count := rand.Intn(subMax) + 1
 	resp, err := get(fmt.Sprintf("subscriptions/read/%s/%s?count=%d", topic, subscription, count))
 
 	if err != nil {
@@ -109,6 +102,7 @@ func sub(id int) {
 		log.Printf("worker:%d\t%sed\t%s", id, action, r.Message)
 	}
 
+	wg.Done()
 }
 
 func main() {
@@ -117,14 +111,15 @@ func main() {
 			log.Printf("creating topic: %s, subscription %s", topic, sub)
 			post("/create", []byte(fmt.Sprintf(`{"topic":"%s", "subscriptions": ["%s"]}`, topic, sub)))
 		}
-
 	}
 
-	for id := 0; id < 500; id++ {
-		log.Printf("worker:%d\tstarting\n", id)
-		go randomRepeat(id, pub)
-		randomSleep()
-		go randomRepeat(id, sub)
+	var waitgroup sync.WaitGroup
+	for id := 0; id < numWorkers; id++ {
+		waitgroup.Add(2)
+		log.Printf("worker:%d\tready\n", id)
+		go pub(id, &waitgroup)
+		go sub(id, &waitgroup)
 	}
 
+	waitgroup.Wait()
 }
