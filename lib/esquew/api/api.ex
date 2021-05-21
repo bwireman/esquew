@@ -37,6 +37,7 @@ defmodule Esquew.Api do
   end
 
   def start_link(_opts) do
+    IO.puts("starting Esquew on localhost:4000")
     Plug.Cowboy.http(@name, [])
   end
 

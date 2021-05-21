@@ -21,7 +21,7 @@ defmodule Esquew.Api.TopicRouter do
 
           {200,
            %Esquew.Api.APIResp{
-             response: "Added topic #{topic}, and subscription #{subs}"
+             response: "Added topic #{topic}, and subscription(s) #{Enum.join(subs, ", ")}"
            }}
 
         _ ->

@@ -30,7 +30,7 @@ defmodule Esquew.Api.SubscriptionRouterTest do
       conn,
       200,
       Poison.encode!(%Esquew.Api.APIResp{
-        response: "Added topic APITestTopic, and subscription APITestSubscription"
+        response: "Added topic APITestTopic, and subscription(s) APITestSubscription"
       })
     )
 
