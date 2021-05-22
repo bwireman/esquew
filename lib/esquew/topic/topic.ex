@@ -13,7 +13,7 @@ defmodule Esquew.Topic do
 
       _ ->
         Registry.dispatch(@registry, topic, fn entries ->
-          for {pid, _} <- entries, do: GenServer.cast(pid, {:publish, msg})
+          for {_, sub} <- entries, do: Esquew.Subscription.publish(topic, sub, msg)
         end)
     end
   end

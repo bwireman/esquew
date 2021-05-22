@@ -57,8 +57,19 @@ defmodule Esquew.Subscription do
     end
   end
 
+  @spec publish(String.t(), String.t(), String.t()) :: :ok
+  def publish(topic, name, message) do
+    case lookup_subscription(topic, name) do
+      {:ok, pid} ->
+        GenServer.cast(pid, {:publish, message})
+
+      resp ->
+        resp
+    end
+  end
+
   ## private
-  @spec lookup_subscription(String.t(), String.t()) :: {atom(), pid()}
+  @spec lookup_subscription(String.t(), String.t()) :: {:ok, pid()} | {:error, String.t()}
   defp lookup_subscription(topic, subscription) do
     case Registry.match(@registry, topic, subscription) do
       [{pid, _}] ->
